@@ -209,9 +209,12 @@ def set_triage_started_field(ticket_key):
     print(f"[DEBUG] Set triage started field: {resp.status_code} {resp.text}")
 
 def monitor_for_thumbs_up(ts, ticket_key):
-    print("Polling for thumbs up reactions on alert message...")
+    print("Polling for thumbs up reactions on alert message (timeout: 1 minute)...")
     acknowledged = False
-    while not acknowledged:
+    start_time = time.time()
+    timeout = 60  # 1 minute
+    
+    while not acknowledged and (time.time() - start_time) < timeout:
         reactions = get_reactions(ts)
         for reaction in reactions:
             if reaction["name"].startswith("thumbsup") or reaction["name"].startswith("+1") or reaction["name"].startswith("thumbs_up"):
@@ -228,7 +231,11 @@ def monitor_for_thumbs_up(ts, ticket_key):
                     transition_jira_ticket_in_progress(ticket_key)
                     acknowledged = True
                     break
-        time.sleep(5)
+        if not acknowledged:
+            time.sleep(5)
+    
+    if not acknowledged:
+        print("⏰ Timeout reached - no thumbs up detected within 1 minute")
 
 def post_to_slack(entry, ticket_key=None):
     if not SLACK_BOT_TOKEN or not SLACK_CHANNEL_ID:
@@ -238,7 +245,7 @@ def post_to_slack(entry, ticket_key=None):
         "Content-Type": "application/json"
     }
     message_parts = []
-    message_parts.append(f"🔍 Krebs")
+    message_parts.append(f"🔍 KrebsOnSecurity")
     message_parts.append(f"Title: {getattr(entry, 'title', '')}")
     if ticket_key:
         jira_url = f"{JIRA_URL}/browse/{ticket_key}"

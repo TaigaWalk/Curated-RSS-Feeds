@@ -1,5 +1,6 @@
 # Cache files for RSS entries
 .seen_entries_*.json
+.message_ticket_mappings.json
 
 # Python
 __pycache__/

@@ -1,0 +1,44 @@
+name: Check RSS Alert Acknowledgments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-acknowledgments:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Restore acknowledgment cache
+        uses: actions/cache@v3
+        with:
+          path: .message_ticket_mappings.json
+          key: message-mappings-${{ github.run_id }}
+          restore-keys: |
+            message-mappings-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check for acknowledgments
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: python check_acknowledgments.py
+
+      - name: Save acknowledgment cache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: .message_ticket_mappings.json
+          key: message-mappings-${{ github.run_id }} 
