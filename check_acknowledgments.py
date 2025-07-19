@@ -168,7 +168,7 @@ def check_message_acknowledgments():
         if "JIRA Ticket:" in text:
             # Extract ticket key from message
             import re
-            ticket_match = re.search(r'JIRA Ticket:.*?\|([A-Z]+-\d+)\>', text)
+            ticket_match = re.search(r'JIRA Ticket:\s*([A-Z]+-\d+)', text)
             if ticket_match:
                 ticket_key = ticket_match.group(1)
                 
