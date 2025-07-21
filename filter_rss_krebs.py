@@ -245,7 +245,7 @@ def post_to_slack(entry, ticket_key=None):
         "Content-Type": "application/json"
     }
     message_parts = []
-    message_parts.append(f"🔍 KrebsOnSecurity")
+    message_parts.append(f"🔍 Krebs")
     message_parts.append(f"Title: {getattr(entry, 'title', '')}")
     if ticket_key:
         jira_url = f"{JIRA_URL}/browse/{ticket_key}"

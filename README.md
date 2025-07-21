@@ -8,13 +8,10 @@ This script monitors multiple RSS feeds for security alerts related to specific 
 - **Keyword Matching**: Filters entries based on customizable product and threat keywords
 - **Slack Integration**: Posts formatted alerts to Slack with source, title, and JIRA ticket links
 - **JIRA Integration**: Creates JIRA tickets as subtasks linked to a security epic
-- **Hybrid Acknowledgment System**: 
-  - **Immediate Response**: RSS scripts monitor for thumbs up for 1 minute
-  - **Late Catch-up**: Separate acknowledgment script catches delayed responses
-  - **No Infinite Loops**: Guaranteed timeout protection
+- **Automated Acknowledgment**: Monitors for thumbs up reactions and assigns tickets to the first person who acknowledges
 - **Ticket Status Management**: Automatically transitions tickets to "In Progress" upon acknowledgment
 - **Duplicate Prevention**: Uses cache files to avoid creating duplicate tickets
-- **Rate Limit Protection**: Optimized API usage to prevent rate limiting
+- **Acknowledgment Monitoring**: Separate script to continuously check for acknowledgments and manage ticket assignments
 
 ## Setup
 
@@ -62,8 +59,6 @@ Create a JIRA epic in your security project (e.g., "SEC-123") that will serve as
 
 ## Usage
 
-### RSS Filter Scripts
-
 Run any of the filter scripts:
 
 ```bash
@@ -72,14 +67,6 @@ python filter_rss_cisa.py
 python filter_rss_hackernews.py
 python filter_rss_krebs.py
 python filter_rss_darkreading.py
-```
-
-### Acknowledgment Script
-
-Run the acknowledgment script to catch late acknowledgments:
-
-```bash
-python check_acknowledgments.py
 ```
 
 ## How It Works
@@ -97,14 +84,12 @@ python check_acknowledgments.py
    - Adds relevant labels
 5. **Slack Notification**: Posts formatted alerts to the configured Slack channel
 
-### 3. Hybrid Acknowledgment Workflow
-6. **Immediate Monitoring**: RSS script monitors for thumbs up reactions for exactly 1 minute
-7. **Timeout Protection**: If no acknowledgment within 1 minute, script finishes safely
-8. **Late Catch-up**: Separate acknowledgment script checks recent messages for missed acknowledgments
-9. **User Assignment**: First person to react gets assigned the JIRA ticket (using their Slack email)
-10. **Status Update**: Ticket automatically transitions to "In Progress"
-11. **Confirmation**: Bot posts acknowledgment message in the Slack thread
-12. **Cache Update**: Updates cache files to prevent duplicate processing
+### 3. Acknowledgment Workflow
+6. **Reaction Monitoring**: Continuously monitors for thumbs up reactions on the Slack message
+7. **User Assignment**: First person to react gets assigned the JIRA ticket (using their Slack email)
+8. **Status Update**: Ticket automatically transitions to "In Progress"
+9. **Confirmation**: Bot posts acknowledgment message in the Slack thread
+10. **Cache Update**: Updates the cache file with new entry links
 
 ## Slack Message Format
 
@@ -119,29 +104,19 @@ JIRA Ticket: SEC-123
 **Source Emojis:**
 - **🧠 BleepingComputer** - Brain emoji for intelligence/security news
 - **🛡️ CISA** - Shield emoji for government security advisories
-- **💻 HackerNews** - Computer emoji for tech news
-- **🔍 KrebsOnSecurity** - Magnifying glass emoji for investigative journalism
-- **🌑 Dark Reading** - Moon emoji for "dark" security news
+- **📰 HackerNews** - Newspaper emoji for tech news
+- **🔍 Krebs** - Magnifying glass emoji for investigative journalism
+- **🌙 DarkReading** - Moon emoji for "dark" security news
 
 The ticket number is a clickable link that takes you directly to the JIRA ticket.
 
 ## Acknowledgment Workflow
 
-### Immediate Response (RSS Scripts)
 1. **Alert Posted**: Security alert appears in Slack with JIRA ticket link
-2. **1-Minute Window**: RSS script monitors for thumbs up reactions
-3. **Quick Acknowledgment**: If thumbs up detected within 1 minute:
-   - First person to react gets assigned the JIRA ticket
-   - Ticket automatically transitions to "In Progress"
-   - Bot posts acknowledgment message in the thread
-4. **Safe Timeout**: If no acknowledgment within 1 minute, script finishes
-
-### Late Catch-up (Acknowledgment Script)
-5. **Manual Check**: Run `check_acknowledgments.py` to check for late acknowledgments
-6. **Recent Messages**: Script checks last 50 messages for JIRA ticket references
-7. **Reaction Detection**: Looks for thumbs up reactions on messages with JIRA tickets
-8. **Processing**: Same acknowledgment workflow as RSS scripts
-9. **Cache Protection**: Prevents duplicate processing
+2. **User Acknowledges**: Team member reacts with thumbs up (👍)
+3. **Automatic Assignment**: First person to react gets assigned the JIRA ticket
+4. **Status Update**: Ticket automatically transitions to "In Progress"
+5. **Confirmation**: Bot posts acknowledgment message in the thread
 
 **Note**: Only the first thumbs up reaction triggers the assignment and status change to prevent multiple assignments.
 
@@ -190,7 +165,6 @@ The script includes detailed logging. Check the console output for:
 - ❌ Error messages for failed operations
 - 📋 Summary of created tickets
 - 👍 Thumbs up detection and assignment messages
-- ⏰ Timeout messages when no acknowledgment is detected
 
 ## Files
 
@@ -200,12 +174,12 @@ The script includes detailed logging. Check the console output for:
 - `filter_rss_hackernews.py`: HackerNews RSS filter
 - `filter_rss_krebs.py`: Krebs on Security RSS filter
 - `filter_rss_darkreading.py`: DarkReading RSS filter
-- `check_acknowledgments.py`: Late acknowledgment processor
+- `check_acknowledgments.py`: Monitors Slack for acknowledgments and manages JIRA ticket assignments
 
 ### Support Files
 - `requirements.txt`: Python dependencies
-- `.seen_entries_*.json`: Cache files for RSS entries (auto-generated)
-- `.message_ticket_mappings.json`: Cache file for acknowledgment tracking (auto-generated)
+- `.seen_entries_*.json`: Cache files (auto-generated)
+- `.message_ticket_mappings.json`: Acknowledgment tracking file (auto-generated)
 - `feeds/*.xml`: Filtered RSS feed outputs
 
 ## Required Environment Variables
@@ -229,7 +203,6 @@ Each RSS source has its own GitHub Actions workflow that can be triggered manual
 - **🔄 HackerNews RSS Filter** - `.github/workflows/rss-filter-hackernews.yml`
 - **🔄 Krebs RSS Filter** - `.github/workflows/rss-filter-krebs.yml`
 - **🔄 DarkReading RSS Filter** - `.github/workflows/rss-filter-darkreading.yml`
-- **✅ Check RSS Alert Acknowledgments** - `.github/workflows/check-acknowledgments.yml`
 
 ### Setting up GitHub Actions
 
@@ -250,7 +223,76 @@ Each RSS source has its own GitHub Actions workflow that can be triggered manual
 - **Cache Management**: Automatically caches seen entries to prevent duplicates
 - **Environment Variables**: Uses GitHub Secrets for secure credential management
 - **Error Handling**: Continues execution even if cache save fails
-- **Timeout Protection**: RSS workflows have 1-minute timeout to prevent infinite loops
+
+## Acknowledgment Monitoring System
+
+The `check_acknowledgments.py` script provides continuous monitoring of Slack messages for acknowledgment reactions and automated JIRA ticket management.
+
+### Features
+
+- **Message Monitoring**: Checks the last 100 messages in the configured Slack channel
+- **Pattern Recognition**: Identifies JIRA ticket references using multiple patterns:
+  - Standard bot format: `JIRA Ticket: <***/browse/SPCOPS-1975|SPCOPS-1975>`
+  - Plain text references: `SPCOPS-1975`
+  - JIRA URLs: `https://.../browse/SPCOPS-1975`
+- **Reaction Detection**: Monitors for thumbs up reactions (👍, +1, thumbs_up)
+- **User Assignment**: Automatically assigns JIRA tickets to the first person who acknowledges
+- **Status Management**: Transitions tickets to "In Progress" upon acknowledgment
+- **Thread Management**: Posts acknowledgment confirmations in Slack threads
+- **Duplicate Prevention**: Checks thread replies to avoid duplicate processing
+- **File Management**: Automatically cleans up old mappings (older than 24 hours)
+
+### Usage
+
+```bash
+python check_acknowledgments.py
+```
+
+### How It Works
+
+1. **Message Retrieval**: Fetches recent messages from the configured Slack channel
+2. **Ticket Detection**: Identifies messages containing JIRA ticket references
+3. **Acknowledgment Check**: Looks for thumbs up reactions on ticket messages
+4. **User Processing**: Gets user information and email for JIRA assignment
+5. **Ticket Management**: 
+   - Assigns the ticket to the acknowledging user
+   - Sets the "Triage Started" timestamp field
+   - Transitions the ticket to "In Progress" status
+6. **Confirmation**: Posts acknowledgment message in the Slack thread
+7. **Tracking**: Maintains a mapping file to prevent duplicate processing
+
+### Statistics and Reporting
+
+The script provides detailed statistics including:
+- Number of JIRA ticket messages found
+- Messages skipped (already processed)
+- Messages checked for new acknowledgments
+- New acknowledgments processed
+
+### File Management
+
+- **`.message_ticket_mappings.json`**: Tracks processed messages and acknowledgments
+- **Automatic Cleanup**: Removes mappings older than 24 hours to prevent file bloat
+- **Error Handling**: Graceful handling of API failures and missing data
+
+### Required Environment Variables
+
+The acknowledgment monitoring system requires these environment variables:
+
+- `JIRA_URL` - Your JIRA instance URL
+- `JIRA_EMAIL` - JIRA user email
+- `JIRA_API_TOKEN` - JIRA API token
+- `SLACK_BOT_TOKEN` - Slack bot token with required scopes
+- `SLACK_CHANNEL_ID` - Target Slack channel ID
+
+### Slack Bot Scopes Required
+
+- `chat:write` - To post acknowledgment messages
+- `reactions:read` - To monitor for thumbs up reactions
+- `users:read` - To get user information
+- `users:read.email` - To get user email for JIRA assignment
+- `channels:history` - To read channel messages
+- `groups:history` - To read private channel messages (if applicable)
 
 ---
 
@@ -275,8 +317,7 @@ Curated-RSS-Feeds/
 │   ├── rss-filter-cisa.yml
 │   ├── rss-filter-hackernews.yml
 │   ├── rss-filter-krebs.yml
-│   ├── rss-filter-darkreading.yml
-│   └── check-acknowledgments.yml
+│   └── rss-filter-darkreading.yml
 ├── feeds/                          # Generated RSS feed outputs
 │   ├── hackernews-products.xml
 │   ├── cisa-products.xml
@@ -288,28 +329,12 @@ Curated-RSS-Feeds/
 ├── filter_rss_bleeping.py          # BleepingComputer RSS filter
 ├── filter_rss_krebs.py             # Krebs on Security RSS filter
 ├── filter_rss_darkreading.py       # DarkReading RSS filter
-├── check_acknowledgments.py        # Late acknowledgment processor
+├── check_acknowledgments.py        # Acknowledgment monitoring script
 ├── requirements.txt                 # Python dependencies
 ├── README.md                       # This file
 ├── LICENSE                         # MIT License
 └── .gitignore                      # Git ignore rules
 ```
-
-## System Architecture
-
-### Key Improvements
-
-✅ **No Infinite Loops**: RSS scripts have 1-minute timeout protection  
-✅ **Hybrid Acknowledgment**: Immediate response + late catch-up system  
-✅ **Rate Limit Safe**: Optimized API usage and timeout protection  
-✅ **Duplicate Prevention**: Multiple cache systems prevent double-processing  
-✅ **Manual Control**: All workflows are manual for better control  
-
-### Workflow Timing
-
-- **RSS Scripts**: 1-minute timeout for immediate acknowledgment
-- **Acknowledgment Script**: Manual execution to catch late responses
-- **No Conflicts**: Multiple RSS scripts can run simultaneously safely
 
 ## Contributing
 
