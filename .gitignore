@@ -2,6 +2,9 @@
 .seen_entries_*.json
 .message_ticket_mappings.json
 
+# VS Code workspace files
+*.code-workspace
+
 # Python
 __pycache__/
 *.py[cod]
