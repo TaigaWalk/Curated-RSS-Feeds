@@ -261,6 +261,41 @@ python check_acknowledgments.py
 6. **Confirmation**: Posts acknowledgment message in the Slack thread
 7. **Tracking**: Maintains a mapping file to prevent duplicate processing
 
+### Example Workflow
+
+The acknowledgment system handles two different scenarios:
+
+#### Scenario 1: Immediate Acknowledgment (During RSS Script)
+When someone acknowledges the alert while the RSS script is still running (within the 1-minute timeout):
+
+![Immediate Acknowledgment](images/immediate-acknowledgment.png)
+
+**Workflow Steps:**
+1. **Initial Alert**: Security Team Bot posts a DarkReading security alert with JIRA ticket link
+2. **Quick Acknowledgment**: Team member (Taiga Walker) reacts with thumbs up 👍 within 1 minute
+3. **Immediate Processing**: The RSS script's `monitor_for_thumbs_up` function detects the reaction
+4. **Confirmation**: Bot posts acknowledgment confirmation with user mention and checkmark ✅
+
+#### Scenario 2: Delayed Acknowledgment (After RSS Script)
+When acknowledgment occurs after the RSS script has completed (handled by `check_acknowledgments.py`):
+
+![Delayed Acknowledgment](images/acknowledgment-workflow.png)
+
+**Workflow Steps:**
+1. **Initial Alert**: Security Team Bot posts a Krebs security alert with JIRA ticket link
+2. **Ticket Creation**: Bot creates JIRA ticket and posts confirmation in thread
+3. **Delayed Acknowledgment**: Team member reacts with thumbs up 👍 after RSS script timeout
+4. **Background Processing**: `check_acknowledgments.py` detects the reaction during its next run
+5. **Confirmation**: Bot posts acknowledgment confirmation with user mention and checkmark ✅
+
+Both scenarios result in the same outcome: automatic ticket assignment, status transition to "In Progress", and acknowledgment confirmation in the Slack thread.
+
+> **Note**: To add the actual screenshots, save your Slack thread screenshots as:
+> - `images/immediate-acknowledgment.png` (for quick acknowledgments)
+> - `images/acknowledgment-workflow.png` (for delayed acknowledgments)
+> 
+> See `images/README.md` for detailed instructions.
+
 ### Statistics and Reporting
 
 The script provides detailed statistics including:
