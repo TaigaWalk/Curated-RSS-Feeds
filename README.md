@@ -23,7 +23,9 @@ pip install -r requirements.txt
 
 ### 2. Environment Variables
 
-Set the following environment variables:
+**⚠️ IMPORTANT: This system is designed to run via GitHub Actions using GitHub Secrets. The scripts will automatically use environment variables from GitHub Secrets when deployed.**
+
+For local development and testing only, you can set the following environment variables:
 
 ```bash
 # Slack Configuration
@@ -37,6 +39,8 @@ export JIRA_API_TOKEN="your-jira-api-token"
 export JIRA_EPIC_KEY="SEC-123"  # The epic key where tickets will be created as subtasks
 export JIRA_PROJECT_KEY="SEC"   # The project key for ticket creation
 ```
+
+**For Production Use:** See the [GitHub Actions Setup](#github-actions-workflows) section below for proper deployment using GitHub Secrets.
 
 ### 3. Slack Bot Setup
 
@@ -196,6 +200,8 @@ The RSS filter system requires these environment variables:
 
 ## GitHub Actions Workflows
 
+**🎯 PRIMARY DEPLOYMENT METHOD: This system is designed to run via GitHub Actions using GitHub Secrets for secure credential management.**
+
 Each RSS source has its own GitHub Actions workflow that can be triggered manually:
 
 - **🔄 BleepingComputer RSS Filter** - `.github/workflows/rss-filter-bleeping.yml`
@@ -203,8 +209,9 @@ Each RSS source has its own GitHub Actions workflow that can be triggered manual
 - **🔄 HackerNews RSS Filter** - `.github/workflows/rss-filter-hackernews.yml`
 - **🔄 Krebs RSS Filter** - `.github/workflows/rss-filter-krebs.yml`
 - **🔄 DarkReading RSS Filter** - `.github/workflows/rss-filter-darkreading.yml`
+- **🔄 Acknowledgment Monitor** - `.github/workflows/check-acknowledgments.yml`
 
-### Setting up GitHub Actions
+### Setting up GitHub Actions (Recommended Production Setup)
 
 1. **Add Secrets**: Go to your repository Settings → Secrets and variables → Actions
 2. **Add Required Secrets**:
@@ -220,8 +227,8 @@ Each RSS source has its own GitHub Actions workflow that can be triggered manual
 ### Workflow Features
 
 - **Manual Trigger**: All workflows use `workflow_dispatch` for manual execution
+- **Secure Credentials**: Uses GitHub Secrets for secure credential management
 - **Cache Management**: Automatically caches seen entries to prevent duplicates
-- **Environment Variables**: Uses GitHub Secrets for secure credential management
 - **Error Handling**: Continues execution even if cache save fails
 
 ## Acknowledgment Monitoring System

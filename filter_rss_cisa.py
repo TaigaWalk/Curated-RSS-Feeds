@@ -337,8 +337,7 @@ def create_jira_ticket(entry):
             "description": description,
             "issuetype": {"name": "Sub-task"},
             "parent": {"key": JIRA_EPIC_KEY},
-            "priority": {"name": "Medium"},
-            "labels": ["security-alert", "rss-feed", "cisa", "auto-generated", "cti"]
+            "priority": {"name": "Medium"}
         }
     }
     try:
