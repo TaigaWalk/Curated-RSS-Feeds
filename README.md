@@ -321,12 +321,6 @@ When acknowledgment occurs after the RSS script has completed (handled by `check
 
 Both scenarios result in the same outcome: automatic ticket assignment, status transition to "In Progress", and acknowledgment confirmation in the Slack thread.
 
-> **Note**: To add the actual screenshots, save your Slack thread screenshots as:
-> - `images/immediate-acknowledgment.png` (for quick acknowledgments)
-> - `images/acknowledgment-workflow.png` (for delayed acknowledgments)
-> 
-> See `images/README.md` for detailed instructions.
-
 ### Statistics and Reporting
 
 The script provides detailed statistics including:
