@@ -222,18 +222,6 @@ The script includes detailed logging. Check the console output for:
 - `.message_ticket_mappings.json`: Acknowledgment tracking file (auto-generated)
 - `feeds/*.xml`: Filtered RSS feed outputs
 
-## Required Environment Variables
-
-The RSS filter system requires these environment variables:
-
-- `JIRA_URL` - Your JIRA instance URL
-- `JIRA_EMAIL` - JIRA user email
-- `JIRA_API_TOKEN` - JIRA API token
-- `JIRA_EPIC_KEY` - Parent epic key for tickets
-- `JIRA_PROJECT_KEY` - JIRA project key
-- `SLACK_BOT_TOKEN` - Slack bot token with `users:read.email` scope
-- `SLACK_CHANNEL_ID` - Target Slack channel ID
-
 ## GitHub Actions Workflows
 
 **🎯 PRIMARY DEPLOYMENT METHOD: This system is designed to run via GitHub Actions using GitHub Secrets for secure credential management.**
@@ -352,30 +340,6 @@ The script provides detailed statistics including:
 - **`.message_ticket_mappings.json`**: Tracks processed messages and acknowledgments
 - **Automatic Cleanup**: Removes mappings older than 24 hours to prevent file bloat
 - **Error Handling**: Graceful handling of API failures and missing data
-
-### Required Environment Variables
-
-The acknowledgment monitoring system requires these environment variables:
-
-- `JIRA_URL` - Your JIRA instance URL
-- `JIRA_EMAIL` - JIRA user email
-- `JIRA_API_TOKEN` - JIRA API token
-- `SLACK_BOT_TOKEN` - Slack bot token with required scopes
-- `SLACK_CHANNEL_ID` - Target Slack channel ID
-
-### Slack Bot Scopes Required
-
-- `chat:write` - To post acknowledgment messages
-- `reactions:read` - To monitor for thumbs up reactions
-- `channels:history` - REQUIRED to read message history for acknowledgment checking
-- `groups:history` - REQUIRED for conversations.history API (even for public channels)
-- `mpim:history` - REQUIRED for conversations.history API (even for public channels)
-- `im:history` - REQUIRED for conversations.history API (even for public channels)
-- `channels:read` - To read channel information
-- `users:read` - To get user information
-- `users:read.email` - To get user email for JIRA assignment
-
-⚠️ **Important**: The `channels:history`, `groups:history`, `mpim:history`, and `im:history` scopes are all required for the acknowledgment system to work. Slack's conversations.history API requires all history scopes to be present, even when only accessing public channels.
 
 ---
 
