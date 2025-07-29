@@ -36,8 +36,8 @@ export SLACK_CHANNEL_ID="C1234567890"
 export JIRA_URL="https://your-domain.atlassian.net"
 export JIRA_EMAIL="your-email@company.com"
 export JIRA_API_TOKEN="your-jira-api-token"
-export JIRA_EPIC_KEY="SEC-123"  # The epic key where tickets will be created as subtasks
-export JIRA_PROJECT_KEY="SEC"   # The project key for ticket creation
+export JIRA_EPIC_KEY="ABC-123"  # The epic key where tickets will be created as subtasks
+export JIRA_PROJECT_KEY="ABC"   # The project key for ticket creation
 ```
 
 **For Production Use:** See the [GitHub Actions Setup](#github-actions-workflows) section below for proper deployment using GitHub Secrets.
@@ -45,10 +45,46 @@ export JIRA_PROJECT_KEY="SEC"   # The project key for ticket creation
 ### 3. Slack Bot Setup
 
 The Slack bot requires the following scopes:
+
 - `chat:write` - To post messages
 - `reactions:read` - To monitor for thumbs up reactions
+- `channels:history` - REQUIRED to read message history for acknowledgment checking
+- `groups:history` - REQUIRED for conversations.history API (even for public channels)
+- `mpim:history` - REQUIRED for conversations.history API (even for public channels)
+- `im:history` - REQUIRED for conversations.history API (even for public channels)
+- `channels:read` - To read channel information
 - `users:read` - To get user information
 - `users:read.email` - To get user email for JIRA assignment
+
+⚠️ **Important**: The `channels:history`, `groups:history`, `mpim:history`, and `im:history` scopes are all required for the acknowledgment system to work. Slack's conversations.history API requires all history scopes to be present, even when only accessing public channels.
+
+### Creating a Slack Bot
+
+To set up the Slack bot for this system:
+
+1. **Create a Slack App**:
+   - Go to [api.slack.com/apps](https://api.slack.com/apps)
+   - Click "Create New App" → "From scratch"
+   - Give your app a name (e.g., "RSS Security Alert Bot")
+   - Select your workspace
+
+2. **Configure Bot Token Scopes**:
+   - Go to "OAuth & Permissions" in the left sidebar
+   - Under "Scopes" → "Bot Token Scopes", add all the required scopes listed above
+   - Click "Install to Workspace" at the top of the page
+
+3. **Get Your Bot Token**:
+   - After installation, copy the "Bot User OAuth Token" (starts with `xoxb-`)
+   - This is your `SLACK_BOT_TOKEN`
+
+4. **Invite Bot to Channel**:
+   - In your Slack workspace, invite the bot to the channel where you want alerts posted
+   - Use: `/invite @your-bot-name`
+
+5. **Get Channel ID**:
+   - Right-click on the channel name in Slack
+   - Select "Copy link" and extract the channel ID from the URL
+   - Or use the Slack API to get the channel ID
 
 ### 4. JIRA API Token Setup
 
@@ -59,7 +95,7 @@ The Slack bot requires the following scopes:
 
 ### 5. Epic Setup
 
-Create a JIRA epic in your security project (e.g., "SEC-123") that will serve as the parent for all security alert tickets.
+Create a JIRA epic in your security project (e.g., "ABC-123") that will serve as the parent for all security alert tickets.
 
 ## Usage
 
@@ -102,7 +138,7 @@ Alerts are posted in a clean, consistent format with unique emojis for each sour
 ```
 🧠 Source: BleepingComputer
 Title: [Article Title]
-JIRA Ticket: SEC-123
+JIRA Ticket: ABC-123
 ```
 
 **Source Emojis:**
@@ -239,9 +275,9 @@ The `check_acknowledgments.py` script provides continuous monitoring of Slack me
 
 - **Message Monitoring**: Checks the last 100 messages in the configured Slack channel
 - **Pattern Recognition**: Identifies JIRA ticket references using multiple patterns:
-  - Standard bot format: `JIRA Ticket: <***/browse/SPCOPS-1975|SPCOPS-1975>`
-  - Plain text references: `SPCOPS-1975`
-  - JIRA URLs: `https://.../browse/SPCOPS-1975`
+  - Standard bot format: `JIRA Ticket: <***/browse/ABCTICKET-1975|ABCTICKET-1975>`
+  - Plain text references: `ABCTICKET-1975`
+  - JIRA URLs: `https://.../browse/ABCTICKET-1975`
 - **Reaction Detection**: Monitors for thumbs up reactions (👍, +1, thumbs_up)
 - **User Assignment**: Automatically assigns JIRA tickets to the first person who acknowledges
 - **Status Management**: Transitions tickets to "In Progress" upon acknowledgment
@@ -331,10 +367,15 @@ The acknowledgment monitoring system requires these environment variables:
 
 - `chat:write` - To post acknowledgment messages
 - `reactions:read` - To monitor for thumbs up reactions
+- `channels:history` - REQUIRED to read message history for acknowledgment checking
+- `groups:history` - REQUIRED for conversations.history API (even for public channels)
+- `mpim:history` - REQUIRED for conversations.history API (even for public channels)
+- `im:history` - REQUIRED for conversations.history API (even for public channels)
+- `channels:read` - To read channel information
 - `users:read` - To get user information
 - `users:read.email` - To get user email for JIRA assignment
-- `channels:history` - To read channel messages
-- `groups:history` - To read private channel messages (if applicable)
+
+⚠️ **Important**: The `channels:history`, `groups:history`, `mpim:history`, and `im:history` scopes are all required for the acknowledgment system to work. Slack's conversations.history API requires all history scopes to be present, even when only accessing public channels.
 
 ---
 
